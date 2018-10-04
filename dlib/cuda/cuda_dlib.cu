@@ -1353,6 +1353,87 @@ namespace dlib
 
     // ----------------------------------------------------------------------------------------
 
+        __global__ void _cuda_srelu(const float* s, float* d, size_t n, const float* pp)
+        {
+            const float *p = pp;
+            for (auto i : grid_stride_range(0, n))
+            {
+                if (s[i] >= p[1])
+                    d[i] = p[1] + p[3]*(s[i]-p[1]);
+                else if(s[1] <= p[0])
+                    d[i] = p[0] + p[2]*(s[i]-p[0]);
+                else
+                    d[i] = s[i];
+            }
+        }
+
+        void srelu (
+            tensor& dest,
+            const tensor& src,
+            const tensor& param
+        )
+        {
+            launch_kernel(_cuda_srelu, max_jobs(dest.size()), 
+                src.device(), dest.device(), src.size(), param.device());
+        }
+
+
+     // ----------------------------------------------------------------------------------------
+
+        __global__ void _cuda_srelu_gradient(float* out, const float* s, const float* gi, size_t n, const float* pp, float* ppgrad)
+        {
+            const float *p = pp;
+            float tl_grad = 0;
+            float tr_grad = 0;
+            float al_grad = 0;
+            float ar_grad = 0;
+
+            for(auto i : grid_stride_range(0, n))
+            {
+                if (s[i] >= p[1])
+                {
+                    out[i] += p[3]*gi[i];
+                    tr_grad += gi[i]*(1-p[3]);
+                    ar_grad += gi[i]*(s[i]-p[1]);
+                }
+                else if(s[1] <= p[0])
+                {
+                    out[i] += p[2]*gi[i];
+                    tl_grad += gi[i]*(1-p[2]);
+                    al_grad += gi[i]*(s[i]-p[0]);
+                }
+                else
+                {
+                    out[i] += gi[i];
+                }
+                
+            }            
+            
+            // Then do the warp reduce add thing to merge into one output value.
+            warp_reduce_atomic_add(*(ppgrad), tl_grad);
+            warp_reduce_atomic_add(*(ppgrad+1), tr_grad);
+            warp_reduce_atomic_add(*(ppgrad+2), al_grad);
+            warp_reduce_atomic_add(*(ppgrad+3), ar_grad);
+
+        }
+
+        void srelu_gradient (
+            tensor& grad,
+            const tensor& src,
+            const tensor& gradient_input,
+            const tensor& param,
+            tensor& params_grad 
+        )
+        {
+            params_grad = 0;
+            launch_kernel(_cuda_srelu_gradient, max_jobs(grad.size()), 
+                grad.device(), src.device(), gradient_input.device(), grad.size(),
+                param.device(), params_grad.device());
+        }
+               
+        
+    // ----------------------------------------------------------------------------------------
+
         __global__ void _cuda_resize_bilinear(size_t dsize, size_t dchan_size, size_t dnc, float* d, 
                                               size_t schan_size, int snr, int snc, const float* s, 
                                               const float x_scale, const float y_scale)

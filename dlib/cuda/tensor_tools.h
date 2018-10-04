@@ -1409,6 +1409,23 @@ namespace dlib { namespace tt
               adds the gradient with respect to src to #grad.
     !*/
 
+    
+// ----------------------------------------------------------------------------------------
+
+    void srelu (
+        tensor& dest,
+        const tensor& src,
+        const tensor& param
+    );
+
+    void srelu_gradient (
+        tensor& grad,
+        const tensor& src,
+        const tensor& gradient_input,
+        const tensor& param,
+        tensor& params_grad 
+    );
+    
 // ----------------------------------------------------------------------------------------
 
     void tanh (
