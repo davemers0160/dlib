@@ -505,7 +505,30 @@ namespace dlib
                   is_same_object(grad, gradient_input)==true
         !*/
 
+    // ----------------------------------------------------------------------------------------
 
+        void elu(
+            tensor& dest,
+            const tensor& src,
+            const tensor& param
+        );
+        /*!
+            requires
+                - have_same_dimensions(dest, src) == true
+            ensures
+                - for all valid i:
+                    - #dest.host()[i] == std::max(src.host()[i], 0.0f) + std::min(0.0f, param.host()[0]*std::exp(src.host()[i])-1); 
+                - This function supports in-place operation, i.e. having
+                  is_same_object(dest, src)==true
+        !*/        
+        
+        
+        void elu_gradient(
+            tensor& grad,
+            const tensor& dest,
+            const tensor& gradient_input,
+            const tensor& param
+        );
 
     // ------------------------------------------------------------------------------------
 

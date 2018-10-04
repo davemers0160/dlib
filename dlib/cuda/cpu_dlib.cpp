@@ -1588,7 +1588,58 @@ namespace dlib
                     g[i] += in[i]*(1-d[i]*d[i]);
             }
         }
+        
+    // ----------------------------------------------------------------------------------------
+    
+        void elu (
+            tensor& dest,
+            const tensor& src,
+			const tensor& param
+        )
+        {
+			//ELU(x)=max(0,x)+min(0,p*(exp(x)−1))
+			const float p = param.host()[0];
+            const auto d = dest.host();
+            const auto s = src.host();
 
+			for (size_t i = 0; i < src.size(); ++i)
+                d[i] = std::max(s[i],0.0f) + std::min(0.0f,p*std::exp(s[i])-1);
+        }
+
+        void elu_gradient (
+            tensor& grad,
+            const tensor& dest,
+            const tensor& gradient_input,
+			const tensor& param
+        )
+        {
+			// f'(x) = f(p,x) + p for x<0, 1 for x>=0
+			const float p = param.host()[0];
+            const float* gi = gradient_input.host();
+            const float* in = dest.host();
+            float* out = grad.host();
+            if (is_same_object(grad, gradient_input))
+            {
+                for (size_t i = 0; i < dest.size(); ++i)
+                {
+                    if (in[i] > 0)
+                        out[i] = gi[i];
+                    else
+                        out[i] = gi[i]*(std::max(in[i],0.0f) +  std::min(0.0f,p*std::exp(in[i])-1) + p);
+                }
+            }
+            else
+            {
+                for (size_t i = 0; i < dest.size(); ++i)
+                {
+                    if (in[i] > 0)
+                        out[i] += gi[i];
+					else
+						out[i] += gi[i]*(std::max(in[i],0.0f) +  std::min(0.0f,p*std::exp(in[i])-1) + p);
+                }
+            }
+        }
+        
     // ----------------------------------------------------------------------------------------
 
         void resize_bilinear (

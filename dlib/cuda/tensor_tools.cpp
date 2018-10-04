@@ -909,7 +909,35 @@ namespace dlib { namespace tt
         cpu::tanh_gradient(grad, dest, gradient_input);
 #endif
     }
+		// ----------------------------------------------------------------------------------------
 
+    void elu (
+        tensor& dest,
+        const tensor& src,
+        const tensor& param
+    )
+    {
+#ifdef DLIB_USE_CUDA
+        dlib::cuda::elu(dest, src, param);
+#else
+        cpu::elu(dest, src, param);
+#endif
+    }
+
+    void elu_gradient (
+        tensor& grad,
+        const tensor& src,
+        const tensor& gradient_input,
+        const tensor& param
+    )
+    {
+#ifdef DLIB_USE_CUDA
+        cuda::elu_gradient(grad, src, gradient_input, param);
+#else
+        cpu::elu_gradient(grad, src, gradient_input, param);
+#endif
+    }
+    
 // ----------------------------------------------------------------------------------------
 
     void resize_bilinear (

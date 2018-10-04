@@ -322,7 +322,22 @@ namespace dlib
             const tensor& dest,
             const tensor& gradient_input
         );
+        
+    // ----------------------------------------------------------------------------------------
 
+        void elu (
+            tensor& dest,
+            const tensor& src,
+			const tensor& param
+        );
+
+        void elu_gradient (
+            tensor& grad,
+            const tensor& dest,
+            const tensor& gradient_input,
+			const tensor& param
+        );
+        
     // ----------------------------------------------------------------------------------------
 
         void resize_bilinear (
