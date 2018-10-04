@@ -909,7 +909,8 @@ namespace dlib { namespace tt
         cpu::tanh_gradient(grad, dest, gradient_input);
 #endif
     }
-		// ----------------------------------------------------------------------------------------
+		
+// ----------------------------------------------------------------------------------------
 
     void elu (
         tensor& dest,
@@ -918,7 +919,7 @@ namespace dlib { namespace tt
     )
     {
 #ifdef DLIB_USE_CUDA
-        dlib::cuda::elu(dest, src, param);
+        cuda::elu(dest, src, param);
 #else
         cpu::elu(dest, src, param);
 #endif
