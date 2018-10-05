@@ -1355,13 +1355,13 @@ namespace dlib
 
         __global__ void _cuda_srelu(const float* s, float* d, size_t n, const float* pp)
         {
-            const float *p = pp;
+            const float *p = pp;    // p[0]=tl, p[1]=al, p[2]=tr, p[3]=ar
             for (auto i : grid_stride_range(0, n))
             {
-                if (s[i] >= p[1])
-                    d[i] = p[1] + p[3]*(s[i]-p[1]);
+                if (s[i] >= p[2])
+                    d[i] = p[2] + p[3]*(s[i]-p[2]);
                 else if(s[1] <= p[0])
-                    d[i] = p[0] + p[2]*(s[i]-p[0]);
+                    d[i] = p[0] + p[1]*(s[i]-p[0]);
                 else
                     d[i] = s[i];
             }
@@ -1382,7 +1382,7 @@ namespace dlib
 
         __global__ void _cuda_srelu_gradient(float* out, const float* s, const float* gi, size_t n, const float* pp, float* ppgrad)
         {
-            const float *p = pp;
+            const float *p = pp;    // p[0]=tl, p[1]=al, p[2]=tr, p[3]=ar
             float tl_grad = 0;
             float tr_grad = 0;
             float al_grad = 0;
@@ -1390,16 +1390,16 @@ namespace dlib
 
             for(auto i : grid_stride_range(0, n))
             {
-                if (s[i] >= p[1])
+                if (s[i] >= p[2])
                 {
-                    out[i] += p[3]*gi[i];
+                    out[i]  += gi[i]*p[3];
                     tr_grad += gi[i]*(1-p[3]);
-                    ar_grad += gi[i]*(s[i]-p[1]);
+                    ar_grad += gi[i]*(s[i]-p[2]);
                 }
                 else if(s[1] <= p[0])
                 {
-                    out[i] += p[2]*gi[i];
-                    tl_grad += gi[i]*(1-p[2]);
+                    out[i]  += gi[i]*p[1];
+                    tl_grad += gi[i]*(1-p[1]);
                     al_grad += gi[i]*(s[i]-p[0]);
                 }
                 else
@@ -1410,11 +1410,14 @@ namespace dlib
             }            
             
             // Then do the warp reduce add thing to merge into one output value.
-            warp_reduce_atomic_add(*(ppgrad), tl_grad);
-            warp_reduce_atomic_add(*(ppgrad+1), tr_grad);
-            warp_reduce_atomic_add(*(ppgrad+2), al_grad);
-            warp_reduce_atomic_add(*(ppgrad+3), ar_grad);
-
+            warp_reduce_atomic_add(ppgrad[0], tl_grad);
+            warp_reduce_atomic_add(ppgrad[1], al_grad);
+            warp_reduce_atomic_add(ppgrad[2], tr_grad);
+            warp_reduce_atomic_add(ppgrad[3], ar_grad);
+            //warp_reduce_atomic_add(*(ppgrad), tl_grad);
+            //warp_reduce_atomic_add(*(ppgrad+1), al_grad);
+            //warp_reduce_atomic_add(*(ppgrad+2), tr_grad);
+            //warp_reduce_atomic_add(*(ppgrad+3), ar_grad);
         }
 
         void srelu_gradient (
