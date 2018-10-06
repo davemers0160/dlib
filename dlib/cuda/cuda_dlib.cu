@@ -1356,14 +1356,21 @@ namespace dlib
         __global__ void _cuda_srelu(const float* s, float* d, size_t n, const float* pp)
         {
             const float *p = pp;    // p[0]=tl, p[1]=al, p[2]=tr, p[3]=ar
+            unsigned char t1=0, t2=0;
+
             for (auto i : grid_stride_range(0, n))
             {
-                if (s[i] >= p[2])
-                    d[i] = p[2] + p[3]*(s[i]-p[2]);
-                else if(s[1] <= p[0])
-                    d[i] = p[0] + p[1]*(s[i]-p[0]);
-                else
-                    d[i] = s[i];
+                //if (s[i] >= p[2])
+                //    d[i] = p[2] + p[3]*(s[i]-p[2]);
+                //else if(s[i] <= p[0])
+                //    d[i] = p[0] + p[1]*(s[i]-p[0]);
+                //else
+                //    d[i] = s[i];
+
+                t1 = (unsigned char)(s[i] >= p[2]);
+                t2 = (unsigned char)(s[i] <= p[0]);
+
+                d[i] = t1 * (p[2] + p[3] * (s[i] - p[2])) + t2 * (p[0] + p[1] * (s[i] - p[0])) + (unsigned char)(!(t1||t2))*s[i];
             }
         }
 
@@ -1396,7 +1403,7 @@ namespace dlib
                     tr_grad += gi[i]*(1-p[3]);
                     ar_grad += gi[i]*(s[i]-p[2]);
                 }
-                else if(s[1] <= p[0])
+                else if(s[i] <= p[0])
                 {
                     out[i]  += gi[i]*p[1];
                     tl_grad += gi[i]*(1-p[1]);
@@ -1414,10 +1421,7 @@ namespace dlib
             warp_reduce_atomic_add(ppgrad[1], al_grad);
             warp_reduce_atomic_add(ppgrad[2], tr_grad);
             warp_reduce_atomic_add(ppgrad[3], ar_grad);
-            //warp_reduce_atomic_add(*(ppgrad), tl_grad);
-            //warp_reduce_atomic_add(*(ppgrad+1), al_grad);
-            //warp_reduce_atomic_add(*(ppgrad+2), tr_grad);
-            //warp_reduce_atomic_add(*(ppgrad+3), ar_grad);
+
         }
 
         void srelu_gradient (
