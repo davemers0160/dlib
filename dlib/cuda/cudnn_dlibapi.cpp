@@ -167,7 +167,13 @@ namespace dlib
             thread_local cudnn_activation_descriptor des(CUDNN_ACTIVATION_TANH, CUDNN_PROPAGATE_NAN,0);
             return des.get_handle();
         }
-
+        
+        static cudnnActivationDescriptor_t elu_activation_descriptor()
+        {
+            thread_local cudnn_activation_descriptor des(CUDNN_ACTIVATION_ELU, CUDNN_PROPAGATE_NAN,0);
+            return des.get_handle();
+        }
+        
     // ------------------------------------------------------------------------------------
 
         tensor_descriptor::
@@ -1543,7 +1549,60 @@ namespace dlib
                                           descriptor(grad),
                                           grad.device()));
         }
+        
+    // ------------------------------------------------------------------------------------
 
+        void elu(
+            tensor& dest,
+            const tensor& src,
+            const tensor& param
+        )
+        {
+            DLIB_CASSERT(have_same_dimensions(dest, src));
+            if (src.size() == 0)
+                return;
+
+            const float alpha = param.host()[0];
+            const float beta = 0;
+            CHECK_CUDNN(cudnnActivationForward(context(),
+                                        elu_activation_descriptor(),
+                                        &alpha,
+                                        descriptor(src),
+                                        src.device(),
+                                        &beta,
+                                        descriptor(dest),
+                                        dest.device()));
+        }
+
+        void elu_gradient(
+            tensor& grad,
+            const tensor& dest,
+            const tensor& gradient_input,
+            const tensor& param
+        )
+        {
+            DLIB_CASSERT(
+                have_same_dimensions(dest, gradient_input) == true &&
+                have_same_dimensions(dest, grad) == true);
+            if (dest.size() == 0)
+                return;
+
+            const float alpha = param.host()[0];
+            const float beta = is_same_object(grad, gradient_input) ? 0 : 1;
+            CHECK_CUDNN(cudnnActivationBackward(context(),
+                                        elu_activation_descriptor(),
+                                        &alpha,
+                                        descriptor(dest),
+                                        dest.device(),
+                                        descriptor(gradient_input),
+                                        gradient_input.device(),
+                                        descriptor(dest),
+                                        dest.device(),
+                                        &beta,
+                                        descriptor(grad),
+                                        grad.device()));
+        }
+    
     // ------------------------------------------------------------------------------------
     }
 }
