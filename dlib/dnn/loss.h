@@ -2529,11 +2529,11 @@ namespace dlib
             }
 
 
-#ifdef DLIB_USE_CUDA
-            double loss;
-            cuda_compute(truth, output_tensor, grad, loss);
-            return loss;
-#else
+//#ifdef DLIB_USE_CUDA
+//            double loss;
+//            cuda_compute(truth, output_tensor, grad, loss);
+//            return loss;
+//#else
 
             tt::softmax(grad, output_tensor);
 
@@ -2573,7 +2573,7 @@ namespace dlib
                 }
             }
             return loss;
-#endif
+//#endif
         }
 
         friend void serialize(const loss_multiclass_log_per_pixel_& , std::ostream& out)
@@ -2608,9 +2608,9 @@ namespace dlib
         }
 
 
-#ifdef DLIB_USE_CUDA
-        cuda::compute_loss_multiclass_log_per_pixel cuda_compute;
-#endif
+//#ifdef DLIB_USE_CUDA
+//        cuda::compute_loss_multiclass_log_per_pixel cuda_compute;
+//#endif
     };
 
     template <typename SUBNET>
