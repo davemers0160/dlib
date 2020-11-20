@@ -12,6 +12,74 @@
 
 <current>
 New Features and Improvements:
+   - Added support for cuDNN 8.0.
+   - Added support for CUDA in Python 3.8 on Windows.
+   - Allow forwarding initial function evaluations into find_max_global().
+   - Can now load PNG images from a memory buffer.
+
+Non-Backwards Compatible Changes:
+
+Bug fixes:
+   - Improved error messages for python users trying to install dlib
+     with CUDA enabled or who are using windows.
+   - Fix random forest regression not doing quite the right thing.
+
+</current>
+
+<!-- **************************************************************************************  -->
+
+<old name="19.20" date="Jun 06, 2020">
+New Features and Improvements:
+   - Added CUDA implementation for loss_mean_squared_per_channel_and_pixel.
+   - Added DCGAN example in examples/dnn_dcgan_train_ex.cpp
+   - Added transfer learning example in examples/dnn_introduction3_ex.cpp
+   - Added leaky_relu activation layer
+   - Added mish activation layer 
+   - Added loss_multiclass_log_weighted
+   - Added loss_binary_log_per_pixel
+   - Minor API simplifications in deep learning tooling.
+   - imglab can automatically select the number of image clusters when --cluster 0 is given.
+   - Added a relative epsilon termination option to svm_c_linear_trainer
+   - Support new version of OpenCV that doesn't have IplImage anymore.
+
+Non-Backwards Compatible Changes:
+
+Bug fixes:
+   - Corrected interpolate_bilinear for lab_pixel.
+   - Fix build errors in CUDA 10.2
+   - Make equal_error_rate() handle degenerate case where all scores are equal.
+   - Fix DLIB_ISO_CPP_ONLY not working
+   - Fix build errors in C++20 build mode.
+   - Fixed function_evaluation_request::set() invalidating function_evaluation_request::x()
+</old>
+
+<!-- **************************************************************************************  -->
+
+<old name="19.19" date="Dec 14, 2019">
+New Features and Improvements:
+   - Made find_min_global() and find_max_global() much faster when using them
+     to optimize inexpensive functions.  These tools now measure the runtime of
+     the objective function and automatically tune themselves to balance solver
+     overhead vs objective function execution time.
+   - Improved handling of label and ignore boxes in loss_mmod layer.
+     See here for more details: https://github.com/davisking/dlib/issues/1894
+   - Better auto-detection of build configurations on some platforms.
+   - Shiny new deep instance segmentation examples:
+     dnn_instance_segmentation_ex.cpp and dnn_instance_segmentation_train_ex.cpp.  
+
+Non-Backwards Compatible Changes:
+
+Bug fixes:
+   - Fix build error in some versions of visual studio in some setups.
+   - Fix find_max() going into an infinite loop in some cases when a
+     non-differentiable function is given.
+
+</old>
+
+<!-- **************************************************************************************  -->
+
+<old name="19.18" date="Sep 22, 2019">
+New Features and Improvements:
    - Make dlib.full_object_detection take list of dlib.point or dlib.points.
    - CMake scripts will automatically include the Intel MKL's iomp dll in the
      output folder to reduce confusion for windows users who haven't added the
@@ -35,7 +103,7 @@ Bug fixes:
    - Various improvements to CMake built scripts to handle unusual system configurations.
    - Fixed bug in multi-GPU training of semantic segmentation models.
 
-</current>
+</old>
 
 <!-- **************************************************************************************  -->
 
